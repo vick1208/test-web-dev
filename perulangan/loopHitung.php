@@ -63,21 +63,21 @@ class LoopHitung
     }
 }
 
-$jml35 = 0;
 
-while ($jml35 < 5) {
+
+for ($jml35 = 0; $jml35 < 5; $jml35++) {
     $masukan = (int)readline("Masukkan angka :");
     $hitung = new LoopHitung($masukan);
-     
+    
         if ($jml35 == 1) {
             $hitung->bagi53();
-            $jml35++;
+            
         } else {
             $hitung->bagi35();
-            $jml35++;
+            
         }
-    $hitung->bagi3($jml35);
-    $hitung->bagi5($jml35);
+        $hitung->bagi3($jml35);
+        $hitung->bagi5($jml35);
     
 }
 echo "Program selesai";
