@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CheckShipFeeController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -16,3 +17,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 });
+
+Route::get('/provinces',[CheckShipFeeController::class,'province'])->name('provinces');
+Route::get('/cities',[CheckShipFeeController::class,'city'])->name('cities');
+Route::post('/check-ongkir', [CheckShipFeeController::class,'checkOngkir'])->name('check-ongkir');
