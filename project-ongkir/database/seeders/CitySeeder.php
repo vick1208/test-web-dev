@@ -6,6 +6,7 @@ use App\Models\City;
 use App\Models\Province;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 
 class CitySeeder extends Seeder
@@ -13,6 +14,8 @@ class CitySeeder extends Seeder
 
     public function run(): void
     {
+        ini_set('memory_limit', '800M');
+        DB::disableQueryLog();
         $provinces = Province::all();
         foreach ($provinces as $province) {
             $cities = Http::withOptions(['verify' => false])->withHeaders([
