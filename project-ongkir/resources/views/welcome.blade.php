@@ -6,9 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Integrasi Rajaongkir</title>
+    {{-- @vite(['resources/css/app.css']) --}}
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
-    </head>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+</head>
 
 <body>
     <main class="py-5">
@@ -28,6 +30,7 @@
                                         <label for="origin_province" class="form-label">Province</label>
                                         <select name="origin_province" id="origin_province" class="form-select">
                                             <option>Choose Province</option>
+                                            <option value=""></option>
                                         </select>
                                     </div>
                                     <div class="col-md-6">
@@ -79,9 +82,151 @@
             </div>
         </div>
     </main>
-    @vite(['resources/js/app.js'])
-    {{-- <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script> --}}
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
-    <script src="{{ asset('/js/query.js') }}"></script>
-  </body>
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"
+        integrity="sha256-2Pmvv0kuTBOenSvLm6bvfBSSHrUJ+3A7x6P5Ebd07/g=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous">
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+    $(function () {
+	$('#origin_province, #destination_province').select2({
+        ajax: {
+            url: "{{ route('provinces') }}",
+            type: 'GET',
+            dataType: 'json',
+            delay: 250,
+            data: function(params){
+                return {
+                    keyword: params.term
+                }
+            },
+            processResults: function(response){
+                return {
+                    results: response
+                }
+            },
+        }
+    });
+
+    $('#origin_city, #destination_city').select2();
+
+    $('#origin_province').on('change', function(){
+        $('#origin_city').empty();
+        $('#origin_city').append('<option>Choose City</option>');
+        $('#origin_city').select2('close');
+        $('#origin_city').select2({
+            ajax: {
+                url: "{{ route('cities') }}",
+                type: 'GET',
+                dataType: 'json',
+                delay: 250,
+                data: function(params){
+                    return {
+                        keyword: params.term,
+                        province_id: $('#origin_province').val()
+                    }
+                },
+                processResults: function(response){
+                    return {
+                        results: response
+                    }
+                },
+            }
+        });
+    });
+
+    $('#destination_province').on('change', function(){
+        $('#destination_city').empty();
+        $('#destination_city').append('<option>Choose City</option>');
+        $('#destination_city').select2('close');
+        $('#destination_city').select2({
+            ajax: {
+                url: "{{ route('cities') }}",
+                type: 'GET',
+                dataType: 'json',
+                delay: 250,
+                data: function(params){
+                    return {
+                        keyword: params.term,
+                        province_id: $('#destination_province').val()
+                    }
+                },
+                processResults: function(response){
+                    return {
+                        results: response
+                    }
+                },
+            }
+        });
+    });
+
+    $('#checkBtn').on('click', function(e){
+        e.preventDefault();
+        let origin = $('#origin_city').val();
+        let destination = $('#destination_city').val();
+        let courier = $('#courier').val();
+        let weight = $('#weight').val();
+        $.ajax({
+            url: "{{ route('check-ongkir') }}",
+            type: 'POST',
+            dataType: 'json',
+            data: {
+                _token: "{{ csrf_token() }}",
+                origin: origin,
+                destination: destination,
+                courier: courier,
+                weight: weight
+            },
+            beforeSend: function(){
+                $('#checkBtn').html('Loading...');
+                $('#checkBtn').attr('disabled', true);
+            },
+            success: function(response){
+                $('#result').removeClass('d-none');
+                $('#checkBtn').html('Submit');
+                $('#checkBtn').attr('disabled', false);
+                $('#result').empty();
+                $('#result').append(`
+                    <div class="col-12">
+                        <div class="card border rounded shadow">
+                            <div class="card-body">
+                                <table class="table table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th>Service</th>
+                                            <th>Description</th>
+                                            <th>Cost</th>
+                                            <th>ETD</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="resultBody">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                `);
+                $.each(response, function(i, val){
+                    $('#resultBody').append(`
+                        <tr>
+                            <td>${val.service}</td>
+                            <td>${val.description}</td>
+                            <td>${val.cost[0].value}</td>
+                            <td>${val.cost[0].etd}</td>
+                        </tr>
+                    `);
+                });
+            },
+            error: function(xhr){
+                console.log(xhr.responseText);
+            }
+        });
+    });
+});
+
+
+    </script>
+</body>
+
 </html>
